@@ -11,16 +11,17 @@ namespace NotoIto.Utility
 {
     public static class ClassSerializer
     {
-        public static Option<Type> ReadXML<Type>(string fileName)
+        public static Option<Type> ReadXML<Type>(string file)
         {
-            string xmlDir = new FileInfo(fileName).Directory.FullName;
+            string xmlDir = new FileInfo(file).Directory.FullName;
+            string fileName = new FileInfo(file).Name;
             Type model;
             autoCreateDir(xmlDir);
             XmlSerializer serializer = new XmlSerializer(typeof(Type));
             FileStream fs = null;
             try
             {
-                fs = new FileStream(xmlDir + fileName, FileMode.Open);
+                fs = new FileStream(Path.Combine(xmlDir, fileName), FileMode.Open);
                 model = (Type)serializer.Deserialize(fs);
             }
             catch
@@ -34,16 +35,17 @@ namespace NotoIto.Utility
             return model.SomeNotNull();
         }
 
-        public static bool WriteXML<Type>(Type model, string fileName)
+        public static bool WriteXML<Type>(Type model, string file)
         {
-            string xmlDir = new FileInfo(fileName).Directory.FullName;
+            string xmlDir = new FileInfo(file).Directory.FullName;
+            string fileName = new FileInfo(file).Name;
             autoCreateDir(xmlDir);
             XmlSerializer serializer = new XmlSerializer(typeof(Type));
             FileStream fs = null;
             StreamWriter sw = null;
             try
             {
-                fs = new FileStream(xmlDir + fileName, FileMode.Create);
+                fs = new FileStream(Path.Combine(xmlDir, fileName), FileMode.Create);
                 sw = new StreamWriter(fs, Encoding.UTF8);
                 serializer.Serialize(sw, model);
             }
@@ -59,16 +61,17 @@ namespace NotoIto.Utility
             return true;
         }
 
-        public static Option<Type> ReadJSON<Type>(string fileName)
+        public static Option<Type> ReadJSON<Type>(string file)
         {
-            string jsonDir = new FileInfo(fileName).Directory.FullName;
+            string jsonDir = new FileInfo(file).Directory.FullName;
+            string fileName = new FileInfo(file).Name;
             Type model;
             autoCreateDir(jsonDir);
             DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(Type));
             FileStream fs = null;
             try
             {
-                fs = new FileStream(jsonDir + fileName, FileMode.Open);
+                fs = new FileStream(Path.Combine(jsonDir, fileName), FileMode.Open);
                 model = (Type)serializer.ReadObject(fs);
             }
             catch
@@ -82,15 +85,16 @@ namespace NotoIto.Utility
             return model.SomeNotNull();
         }
 
-        public static bool WriteJSON<Type>(Type model, string fileName)
+        public static bool WriteJSON<Type>(Type model, string file)
         {
-            string jsonDir = new FileInfo(fileName).Directory.FullName;
+            string jsonDir = new FileInfo(file).Directory.FullName;
+            string fileName = new FileInfo(file).Name;
             autoCreateDir(jsonDir);
             DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(Type));
             FileStream fs = null;
             try
             {
-                fs = new FileStream(jsonDir + fileName, FileMode.Create);
+                fs = new FileStream(Path.Combine(jsonDir, fileName), FileMode.Create);
                 serializer.WriteObject(fs, model);
             }
             catch

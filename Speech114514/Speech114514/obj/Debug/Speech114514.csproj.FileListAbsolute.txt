@@ -19,7 +19,6 @@ C:\Users\tss_a\Documents\Speech114514\Speech114514\Speech114514\bin\Debug\NAudio
 C:\Users\tss_a\Documents\Speech114514\Speech114514\Speech114514\bin\Debug\Optional.dll
 C:\Users\tss_a\Documents\Speech114514\Speech114514\Speech114514\bin\Debug\NAudio.xml
 C:\Users\tss_a\Documents\Speech114514\Speech114514\Speech114514\bin\Debug\Optional.xml
-C:\Users\tss_a\Documents\Speech114514\Speech114514\Speech114514\obj\Debug\Speech114514.csprojAssemblyReference.cache
 C:\Users\tss_a\Documents\Speech114514\Speech114514\Speech114514\obj\Debug\NotoIto.App.Speech114514.Properties.Resources.resources
 C:\Users\tss_a\Documents\Speech114514\Speech114514\Speech114514\obj\Debug\NotoIto.App.Speech114514.StartupForm.resources
 C:\Users\tss_a\Documents\Speech114514\Speech114514\Speech114514\obj\Debug\Speech114514.csproj.GenerateResource.cache

@@ -17,7 +17,7 @@ namespace NotoIto.App.Speech114514
 {
     public partial class StartupForm : Form
     {
-        string version = "0.1r1";
+        string version = "0.2r1";
         string configDirectory = "";
         Stream inputStream = new MemoryStream();
         Config.AudioSettingsModel audioSettings;
@@ -55,8 +55,8 @@ namespace NotoIto.App.Speech114514
         {
             var waveIn = new WaveIn();
             waveIn.DeviceNumber = index;
-            waveIn.StartRecording();
             waveIn.DataAvailable += new EventHandler<WaveInEventArgs>(sourceStream_DataAvailable);
+            waveIn.StartRecording();
         }
 
         private void PlaySound(int outputDeviceIndex, string fileName)
@@ -89,12 +89,12 @@ namespace NotoIto.App.Speech114514
         {
             this.Text += version;
             configDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + @"\Speech114514";
-            audioSettings = Utility.ClassSerializer.ReadXML<Config.AudioSettingsModel>(configDirectory + @"config.xml")
+            audioSettings = Utility.ClassSerializer.ReadXML<Config.AudioSettingsModel>(configDirectory + @"\config.xml")
                 .Match(
                     some: (x) => x,
                     none: () => new Config.AudioSettingsModel()
                 );
-            vocabulary = Utility.ClassSerializer.ReadXML<Config.VocabularyModel>(configDirectory + @"vocabulary.xml")
+            vocabulary = Utility.ClassSerializer.ReadXML<Config.VocabularyModel>(configDirectory + @"\vocabulary.xml")
                 .Match(
                     some: (x) => x,
                     none: () =>
@@ -120,10 +120,14 @@ namespace NotoIto.App.Speech114514
         {
             if (inputComboBox.SelectedIndex == -1 || outputComboBox.SelectedIndex == -1)
                 return;
-            Utility.ClassSerializer.WriteXML(vocabulary, configDirectory + @"vocabulary.xml");
+            Utility.ClassSerializer.WriteXML(vocabulary, configDirectory + @"\vocabulary.xml");
             var engine = new SpeechRecognitionEngine(Application.CurrentCulture);
             SetInputStream(inputComboBox.SelectedIndex);
-            engine.SetInputToWaveStream(inputStream);
+            engine.SetInputToAudioStream(inputStream, new System.Speech.AudioFormat.SpeechAudioFormatInfo(48000, System.Speech.AudioFormat.AudioBitsPerSample.Sixteen,System.Speech.AudioFormat.AudioChannel.Stereo));
+            //engine.SetInputToWaveStream(inputStream);
+            GrammarBuilder gb = new GrammarBuilder();
+            gb.Append(new Choices(vocabularyDictionary.Keys.ToArray()));
+            engine.LoadGrammar(new Grammar(gb));
             engine.SpeechRecognized += SpeechRecognized;
             engine.RecognizeAsync();
         }
@@ -141,12 +145,14 @@ namespace NotoIto.App.Speech114514
 
         private void inputComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Utility.ClassSerializer.WriteXML(audioSettings, configDirectory + @"config.xml");
+            audioSettings.InputDevice = inputComboBox.Text;
+            Utility.ClassSerializer.WriteXML(audioSettings, configDirectory + @"\config.xml");
         }
 
         private void outputComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Utility.ClassSerializer.WriteXML(audioSettings, configDirectory + @"config.xml");
+            audioSettings.OutputDevice = outputComboBox.Text;
+            Utility.ClassSerializer.WriteXML(audioSettings, configDirectory + @"\config.xml");
         }
     }
 }
