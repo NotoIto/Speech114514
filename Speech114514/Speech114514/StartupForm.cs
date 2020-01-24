@@ -12,17 +12,18 @@ using System.Speech.Recognition;
 using System.IO;
 using NAudio.Wave;
 using Optional;
+using System.Reflection;
 
 namespace NotoIto.App.Speech114514
 {
     public partial class StartupForm : Form
     {
-        string version = "0.2r1";
+        string version = "0.2r3";
         string configDirectory = "";
         Stream inputStream = new MemoryStream();
         Config.AudioSettingsModel audioSettings;
         Config.VocabularyModel vocabulary;
-        List<System.Threading.Thread> playSoundThreads = new List<System.Threading.Thread>();
+        WaveOut waveOut;
         Dictionary<string, string> vocabularyDictionary = new Dictionary<string, string>();
         public StartupForm()
         {
@@ -59,36 +60,23 @@ namespace NotoIto.App.Speech114514
             waveIn.StartRecording();
         }
 
-        private void PlaySound(int outputDeviceIndex, string fileName)
+        private void PlaySound(string fileName)
         {
-            ThreadCleanUp();
-            System.Threading.Thread t = new System.Threading.Thread(new System.Threading.ThreadStart(
-                () =>
-                {
-                    AudioFileReader reader = new AudioFileReader(fileName);
-                    WaveOut waveOut = new WaveOut();
-                    waveOut.DeviceNumber = outputDeviceIndex;
-                    waveOut.Init(reader);
-                    waveOut.Play();
-                }));
-            t.Start();
-            playSoundThreads.Add(t);
-        }
-
-        private void ThreadCleanUp()
-        {
-            playSoundThreads.RemoveAll((x) => !x.IsAlive);
+            AudioFileReader reader = new AudioFileReader(fileName);
+            waveOut.Init(reader);
+            waveOut.Play();
         }
 
         private void sourceStream_DataAvailable(object sender, WaveInEventArgs e)
         {
-            inputStream.Write(e.Buffer, 0, e.Buffer.Length);
+            //inputStream.Write(e.Buffer, 0, e.Buffer.Length);
         }
 
         private void StartupForm_Load(object sender, EventArgs e)
         {
             this.Text += version;
-            configDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + @"\Speech114514";
+            Assembly myAssembly = Assembly.GetEntryAssembly();
+            configDirectory = new FileInfo(myAssembly.Location).Directory.FullName;
             audioSettings = Utility.ClassSerializer.ReadXML<Config.AudioSettingsModel>(configDirectory + @"\config.xml")
                 .Match(
                     some: (x) => x,
@@ -123,13 +111,16 @@ namespace NotoIto.App.Speech114514
             Utility.ClassSerializer.WriteXML(vocabulary, configDirectory + @"\vocabulary.xml");
             var engine = new SpeechRecognitionEngine(Application.CurrentCulture);
             SetInputStream(inputComboBox.SelectedIndex);
-            engine.SetInputToAudioStream(inputStream, new System.Speech.AudioFormat.SpeechAudioFormatInfo(48000, System.Speech.AudioFormat.AudioBitsPerSample.Sixteen,System.Speech.AudioFormat.AudioChannel.Stereo));
+            //engine.SetInputToAudioStream(inputStream, new System.Speech.AudioFormat.SpeechAudioFormatInfo(48000, System.Speech.AudioFormat.AudioBitsPerSample.Sixteen,System.Speech.AudioFormat.AudioChannel.Stereo));
             //engine.SetInputToWaveStream(inputStream);
+            engine.SetInputToDefaultAudioDevice();
             GrammarBuilder gb = new GrammarBuilder();
             gb.Append(new Choices(vocabularyDictionary.Keys.ToArray()));
             engine.LoadGrammar(new Grammar(gb));
             engine.SpeechRecognized += SpeechRecognized;
-            engine.RecognizeAsync();
+            waveOut = new WaveOut();
+            waveOut.DeviceNumber = outputComboBox.SelectedIndex;
+            engine.RecognizeAsync(RecognizeMode.Multiple);
         }
 
         private void SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
@@ -139,7 +130,7 @@ namespace NotoIto.App.Speech114514
             string fileName;
             if (e.Result.Confidence >= 0.5 && vocabularyDictionary.TryGetValue(recognitionWord, out fileName))
             {
-                PlaySound(outputComboBox.SelectedIndex, fileName);
+                PlaySound(fileName);
             }
         }
 
